@@ -122,7 +122,6 @@ export default function RegisterPage() {
     const result = await registerUser(data);
 
     if (!result.success) {
-      // Map field-level errors back into the form
       if (result.fieldErrors) {
         (Object.entries(result.fieldErrors) as [keyof RegisterData, string][])
           .forEach(([field, message]) => setError(field, { message }));
@@ -134,26 +133,11 @@ export default function RegisterPage() {
     }
 
     setDone(true);
-
-    // Auto sign-in with the one-time session token the server action returned
-    const signInResult = await signIn("credentials", {
-      email:        data.email,
-      sessionToken: result.sessionToken,
-      redirect:     false,
+    toast.success("Account created! Please login to continue.", {
+      description: "Use your email and password to sign in.",
+      duration: 4000,
     });
-
-    if (signInResult?.ok) {
-      toast.success(`Welcome to NexMart, ${data.name.split(" ")[0]}! 🎉`, {
-        description: "Your account is ready. Taking you home…",
-        duration: 3000,
-      });
-      router.push("/");
-      router.refresh();
-    } else {
-      // Token consumed or expired — send to login with a helpful message
-      toast("Account created! Please sign in.", { description: "Auto-login failed — just login manually." });
-      router.push("/login");
-    }
+    router.push("/login");
   };
 
   return (
@@ -175,7 +159,7 @@ export default function RegisterPage() {
       {/* Success banner (shown briefly before redirect) */}
       {done && (
         <div className="mb-5 rounded-xl border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/40 px-4 py-3 text-sm text-green-700 dark:text-green-400">
-          Account created! Signing you in…
+          Account created! Redirecting to login…
         </div>
       )}
 
@@ -230,9 +214,7 @@ export default function RegisterPage() {
         <button type="submit" disabled={isSubmitting || done}
           className="w-full flex items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-all duration-200 hover:opacity-85 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-1">
           {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isSubmitting
-            ? done ? "Signing you in…" : "Creating account…"
-            : "Create account"}
+          {isSubmitting ? "Creating account…" : "Create account"}
         </button>
       </form>
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   ArrowLeft, ShieldCheck, Truck,
@@ -238,6 +239,7 @@ const PAY_OPTIONS: PayOption[] = [
 ══════════════════════════════════════════════════ */
 export default function CheckoutPage() {
   const router = useRouter();
+  const { status: authStatus } = useSession();
   const { items, clearCart } = useCartStore();
 
   const [mounted,   setMounted]   = useState(false);
@@ -288,12 +290,23 @@ export default function CheckoutPage() {
 
   /* ── submit ── */
   async function handlePlaceOrder() {
+    // Auth guard — must be logged in to place an order
+    if (authStatus !== "authenticated") {
+      toast.error("Please login to place an order.", {
+        description: "Redirecting to the login page…",
+        duration: 3000,
+      });
+      router.push("/login");
+      return;
+    }
+
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
       document.querySelector("[data-field-error]")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+
     setPlacing(true);
     try {
       await createOrder({
@@ -304,9 +317,10 @@ export default function CheckoutPage() {
       clearCart();
       toast.success("Order placed successfully! 🎉", {
         description: "We'll notify you when it ships. Redirecting to your orders…",
-        duration: 3500,
+        duration: 3000,
       });
-      router.push("/profile/orders");
+      // Use window.location to bypass Next.js router cache and force a full navigation
+      window.location.assign("/profile/orders");
     } catch {
       setPlacing(false);
     }
