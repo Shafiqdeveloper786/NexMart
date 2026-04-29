@@ -1,0 +1,49 @@
+{
+  "name": "nexmart",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "seed": "npx tsx --env-file=.env.local prisma/seed.ts",
+    "postinstall": "prisma generate && node -e \"const{cpSync,existsSync}=require('fs');const s='node_modules/.prisma';const d='node_modules/@prisma/client/.prisma';if(existsSync(s))cpSync(s,d,{recursive:true,force:true});\""
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@next-auth/prisma-adapter": "^1.0.7",
+    "@types/nodemailer": "^8.0.0",
+    "bcryptjs": "^3.0.3",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.11.0",
+    "next": "16.2.4",
+    "next-auth": "^4.24.14",
+    "nodemailer": "^7.0.13",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.74.0",
+    "resend": "^6.12.2",
+    "sonner": "^2.0.7",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
+  },
+  "prisma": {
+    "seed": "npx tsx --env-file=.env.local prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@prisma/client": "^5.22.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  }
+}

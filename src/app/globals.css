@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+/* ============================================================
+   DESIGN TOKENS — NexMart minimalist palette
+   Light: clean white  |  Dark: deep charcoal (#111827)
+   ============================================================ */
+
+:root {
+  /* Core */
+  --background:         #ffffff;
+  --foreground:         #111827;
+
+  /* Surfaces */
+  --card:               #ffffff;
+  --card-foreground:    #111827;
+
+  /* Muted areas */
+  --muted:              #f3f4f6;
+  --muted-foreground:   #6b7280;
+
+  /* Borders */
+  --border:             #e5e7eb;
+  --input:              #e5e7eb;
+
+  /* Primary action */
+  --primary:            #111827;
+  --primary-foreground: #ffffff;
+
+  /* Accent */
+  --accent:             #f3f4f6;
+  --accent-foreground:  #111827;
+
+  /* Destructive */
+  --destructive:        #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Focus ring */
+  --ring:               #d1d5db;
+
+  /* Border radius base */
+  --radius: 0.625rem;
+
+  color-scheme: light;
+}
+
+.dark {
+  --background:         #0A0A0A;
+  --foreground:         #ffffff;
+
+  --card:               #141414;
+  --card-foreground:    #ffffff;
+
+  --muted:              #1a1a1a;
+  --muted-foreground:   #a1a1aa;
+
+  --border:             #2a2a2a;
+  --input:              #2a2a2a;
+
+  --primary:            #ffffff;
+  --primary-foreground: #0A0A0A;
+
+  --accent:             #1a1a1a;
+  --accent-foreground:  #ffffff;
+
+  --destructive:        #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --ring:               #3f3f46;
+
+  color-scheme: dark;
+}
+
+/* Fallback — respect OS preference before JS runs */
+@media (prefers-color-scheme: dark) {
+  :root:not(.dark):not(.light) {
+    --background:       #111827;
+    --foreground:       #f9fafb;
+    --card:             #1f2937;
+    --card-foreground:  #f9fafb;
+    --muted:            #1f2937;
+    --muted-foreground: #9ca3af;
+    --border:           #374151;
+    --input:            #374151;
+    --primary:          #f9fafb;
+    --primary-foreground: #111827;
+    --accent:           #1f2937;
+    --accent-foreground: #f9fafb;
+    --ring:             #4b5563;
+    color-scheme: dark;
+  }
+}
+
+/* ── Tailwind v4 @theme mapping ── */
+@theme inline {
+  --color-background:         var(--background);
+  --color-foreground:         var(--foreground);
+  --color-card:               var(--card);
+  --color-card-foreground:    var(--card-foreground);
+  --color-muted:              var(--muted);
+  --color-muted-foreground:   var(--muted-foreground);
+  --color-border:             var(--border);
+  --color-input:              var(--input);
+  --color-primary:            var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent:             var(--accent);
+  --color-accent-foreground:  var(--accent-foreground);
+  --color-destructive:        var(--destructive);
+  --color-ring:               var(--ring);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-sm:   calc(var(--radius) - 4px);
+  --radius-md:   calc(var(--radius) - 2px);
+  --radius-lg:   var(--radius);
+  --radius-xl:   calc(var(--radius) + 4px);
+  --radius-full: 9999px;
+}
+
+/* ── Base resets ── */
+*,
+*::before,
+*::after {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Prevent horizontal overflow (Embla flex track bleeds past viewport) ── */
+html {
+  overflow-x: hidden;        /* clips at the html level — no scrollbar ever */
+  max-width: 100%;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+body {
+  overflow-x: clip;          /* clip ≠ hidden: doesn't break position:sticky */
+  max-width: 100%;
+}
+
+/* ── Hide scrollbar (used for category nav) ── */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Keyboard focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Card hover lift ── */
+.hover\:-translate-y-0\.5:hover {
+  --tw-translate-y: -2px;
+}
+
+/* ── Cart badge bounce ── */
+@keyframes badge-bounce {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.55); }
+  50%  { transform: scale(0.88); }
+  70%  { transform: scale(1.15); }
+  85%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+.animate-badge-bounce {
+  animation: badge-bounce 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ── Form field error slide-in ── */
+@keyframes field-error {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-field-error {
+  animation: field-error 0.2s ease-out forwards;
+}
+
+/* ── Mobile drawer smooth open ── */
+@keyframes drawer-open {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Place Order button shimmer ── */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.animate-shimmer {
+  animation: shimmer 1.2s ease-in-out infinite;
+}
