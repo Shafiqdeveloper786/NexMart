@@ -134,22 +134,24 @@ export default function RegisterPage() {
     }
 
     setDone(true);
-    toast.success("Registration Successful! Welcome to NexMart", {
-      description: `Great to have you, ${data.name.split(" ")[0]}!`,
-    });
 
-    // Auto sign-in using the one-time session token issued by the server action
+    // Auto sign-in with the one-time session token the server action returned
     const signInResult = await signIn("credentials", {
-      email: data.email,
+      email:        data.email,
       sessionToken: result.sessionToken,
-      redirect: false,
+      redirect:     false,
     });
 
     if (signInResult?.ok) {
+      toast.success(`Welcome to NexMart, ${data.name.split(" ")[0]}! 🎉`, {
+        description: "Your account is ready. Taking you home…",
+        duration: 3000,
+      });
       router.push("/");
       router.refresh();
     } else {
-      // Session token consumed or expired — fall back to login page
+      // Token consumed or expired — send to login with a helpful message
+      toast("Account created! Please sign in.", { description: "Auto-login failed — just login manually." });
       router.push("/login");
     }
   };

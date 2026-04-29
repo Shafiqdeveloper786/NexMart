@@ -18,27 +18,66 @@ export const metadata: Metadata = {
   description: "View your NexMart order history and track deliveries.",
 };
 
-/* ── DB status types and display config ── */
-type DbStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+/* ══════════════════════════════════════════════════════
+   TIME-BASED STATUS ENGINE
+   Rules (override DB status unless CANCELLED):
+     < 6 h  → Processing   (amber/yellow)
+     6–12 h → Shipped      (blue)  + doorstep message
+     > 12 h → Delivered    (green)
+══════════════════════════════════════════════════════ */
 
-const STATUS_BADGE: Record<DbStatus, { label: string; cls: string }> = {
-  PENDING:   { label: "Pending",    cls: "bg-blue-100   dark:bg-blue-950/40   text-blue-700   dark:text-blue-300"   },
-  PAID:      { label: "Paid",       cls: "bg-amber-100  dark:bg-amber-950/40  text-amber-700  dark:text-amber-300"  },
-  SHIPPED:   { label: "Shipped",    cls: "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300" },
-  DELIVERED: { label: "Delivered",  cls: "bg-green-100  dark:bg-green-950/40  text-green-700  dark:text-green-300"  },
-  CANCELLED: { label: "Cancelled",  cls: "bg-red-100    dark:bg-red-950/40    text-red-700    dark:text-red-300"    },
+type TimeStatus = "processing" | "shipped" | "delivered" | "cancelled";
+
+function getTimeStatus(dbStatus: string, createdAt: Date): TimeStatus {
+  if (dbStatus === "CANCELLED") return "cancelled";
+  const hours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+  if (hours < 6)  return "processing";
+  if (hours < 12) return "shipped";
+  return "delivered";
+}
+
+/* ── Badge & tracker config per status ── */
+const STATUS_META: Record<TimeStatus, {
+  label:      string;
+  badgeCls:   string;
+  dotCls:     string;
+  message?:   string;
+}> = {
+  processing: {
+    label:    "Processing",
+    badgeCls: "bg-amber-100  dark:bg-amber-950/40  text-amber-800  dark:text-amber-300  border border-amber-200  dark:border-amber-800/50",
+    dotCls:   "bg-amber-500",
+    message:  "We've received your order and are preparing it for dispatch.",
+  },
+  shipped: {
+    label:    "Shipped",
+    badgeCls: "bg-blue-100   dark:bg-blue-950/40   text-blue-800   dark:text-blue-300   border border-blue-200   dark:border-blue-800/50",
+    dotCls:   "bg-blue-500",
+    message:  "Your order will reach your doorstep soon! 🚚",
+  },
+  delivered: {
+    label:    "Delivered",
+    badgeCls: "bg-green-100  dark:bg-green-950/40  text-green-800  dark:text-green-300  border border-green-200  dark:border-green-800/50",
+    dotCls:   "bg-green-500",
+    message:  "Delivered! Enjoy your purchase. 🎉",
+  },
+  cancelled: {
+    label:    "Cancelled",
+    badgeCls: "bg-red-100    dark:bg-red-950/40    text-red-800    dark:text-red-300    border border-red-200    dark:border-red-800/50",
+    dotCls:   "bg-red-500",
+  },
 };
 
-/* ── 4-step tracker (DB-driven) ── */
-const TRACK_STEPS: { key: DbStatus; label: string; icon: React.ElementType }[] = [
-  { key: "PENDING",   label: "Placed",    icon: ShoppingBag  },
-  { key: "PAID",      label: "Paid",      icon: Package      },
-  { key: "SHIPPED",   label: "Shipped",   icon: Truck        },
-  { key: "DELIVERED", label: "Delivered", icon: CheckCircle  },
+/* ── 3-step visual tracker (Processing → Shipped → Delivered) ── */
+const TRACK_STEPS: { key: TimeStatus; label: string; icon: React.ElementType }[] = [
+  { key: "processing", label: "Processing", icon: Package      },
+  { key: "shipped",    label: "Shipped",    icon: Truck        },
+  { key: "delivered",  label: "Delivered",  icon: CheckCircle  },
 ];
+const STEP_ORDER: TimeStatus[] = ["processing", "shipped", "delivered"];
 
-function StatusTracker({ status }: { status: DbStatus }) {
-  if (status === "CANCELLED") {
+function StatusTracker({ status }: { status: TimeStatus }) {
+  if (status === "cancelled") {
     return (
       <div className="flex items-center gap-2 text-sm text-red-500 dark:text-red-400">
         <XCircle className="h-4 w-4 shrink-0" />
@@ -47,10 +86,11 @@ function StatusTracker({ status }: { status: DbStatus }) {
     );
   }
 
-  const currentIdx = TRACK_STEPS.findIndex(s => s.key === status);
+  const currentIdx = STEP_ORDER.indexOf(status);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
+      {/* Step row */}
       <div className="flex items-center w-full" role="list" aria-label="Order progress">
         {TRACK_STEPS.map((step, i) => {
           const done   = i <= currentIdx;
@@ -59,49 +99,84 @@ function StatusTracker({ status }: { status: DbStatus }) {
           return (
             <div key={step.key} className={cn("flex items-center", i < TRACK_STEPS.length - 1 && "flex-1")}>
               <div className="flex flex-col items-center gap-1 shrink-0">
+                {/* Circle */}
                 <div className={cn(
-                  "flex items-center justify-center rounded-full border-2 h-8 w-8 transition-all",
+                  "flex items-center justify-center rounded-full border-2 h-8 w-8 transition-all duration-300",
                   done
-                    ? "border-foreground bg-foreground text-background"
+                    ? cn(
+                        "border-transparent text-white shadow-sm",
+                        step.key === "processing" && "bg-amber-500",
+                        step.key === "shipped"    && "bg-blue-500",
+                        step.key === "delivered"  && "bg-green-500"
+                      )
                     : "border-border bg-muted/40 text-muted-foreground/30",
-                  active && "ring-2 ring-foreground/20 ring-offset-2 ring-offset-card scale-110"
+                  active && "ring-2 ring-offset-2 ring-offset-card scale-110",
+                  active && step.key === "processing" && "ring-amber-300 dark:ring-amber-700",
+                  active && step.key === "shipped"    && "ring-blue-300  dark:ring-blue-700",
+                  active && step.key === "delivered"  && "ring-green-300 dark:ring-green-700",
                 )}>
                   <Icon className="h-3.5 w-3.5" />
                 </div>
+                {/* Label */}
                 <span className={cn(
-                  "text-[9px] whitespace-nowrap leading-none",
-                  done ? "font-bold text-foreground dark:text-white" : "text-muted-foreground/50"
+                  "text-[9px] whitespace-nowrap leading-none font-semibold",
+                  done
+                    ? step.key === "processing" ? "text-amber-600 dark:text-amber-400"
+                    : step.key === "shipped"    ? "text-blue-600  dark:text-blue-400"
+                    : "text-green-600 dark:text-green-400"
+                    : "text-muted-foreground/40"
                 )}>
                   {step.label}
                 </span>
               </div>
+              {/* Connector line */}
               {i < TRACK_STEPS.length - 1 && (
                 <div className={cn(
-                  "flex-1 h-0.5 rounded-full mx-1 mb-4",
-                  i < currentIdx ? "bg-foreground" : "bg-border"
+                  "flex-1 h-0.5 rounded-full mx-1.5 mb-4 transition-colors duration-500",
+                  i < currentIdx ? "bg-foreground/40" : "bg-border"
                 )} />
               )}
             </div>
           );
         })}
       </div>
-      {/* Progress bar */}
-      <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+
+      {/* Thin progress bar */}
+      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
         <div
-          className="h-full bg-foreground rounded-full transition-all duration-500"
-          style={{ width: `${Math.max(((currentIdx + 1) / TRACK_STEPS.length) * 100, 10)}%` }}
+          className={cn(
+            "h-full rounded-full transition-all duration-700 ease-out",
+            status === "processing" && "bg-amber-500",
+            status === "shipped"    && "bg-blue-500",
+            status === "delivered"  && "bg-green-500"
+          )}
+          style={{ width: `${((currentIdx + 1) / TRACK_STEPS.length) * 100}%` }}
         />
       </div>
+
+      {/* Status message */}
+      {STATUS_META[status].message && (
+        <p className={cn(
+          "text-xs font-medium leading-relaxed",
+          status === "processing" && "text-amber-700 dark:text-amber-400",
+          status === "shipped"    && "text-blue-700  dark:text-blue-400",
+          status === "delivered"  && "text-green-700 dark:text-green-400"
+        )}>
+          {STATUS_META[status].message}
+        </p>
+      )}
     </div>
   );
 }
 
-/* ── Order card ── */
+/* ══════════════════════════════════════════════════════
+   ORDER CARD
+══════════════════════════════════════════════════════ */
 function OrderCard({ order }: { order: OrderWithItems }) {
-  const displayId = deriveDisplayId(order.id);
-  const status    = order.status as DbStatus;
-  const badge     = STATUS_BADGE[status] ?? STATUS_BADGE.PENDING;
-  const canCancel = status !== "DELIVERED" && status !== "CANCELLED";
+  const displayId  = deriveDisplayId(order.id);
+  const status     = getTimeStatus(order.status, order.createdAt);
+  const meta       = STATUS_META[status];
+  const canCancel  = status !== "delivered" && status !== "cancelled";
 
   const date = new Date(order.createdAt).toLocaleDateString("en-US", {
     year: "numeric", month: "short", day: "numeric",
@@ -116,12 +191,14 @@ function OrderCard({ order }: { order: OrderWithItems }) {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4 bg-muted/30 dark:bg-white/[0.02] border-b border-border dark:border-white/[0.06]">
         <div className="space-y-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <span className="text-sm font-black text-slate-900 dark:text-white tracking-wide">
               {displayId}
             </span>
-            <span className={cn("rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide shrink-0", badge.cls)}>
-              {badge.label}
+            {/* Coloured status badge */}
+            <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide shrink-0", meta.badgeCls)}>
+              <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", meta.dotCls)} />
+              {meta.label}
             </span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground dark:text-slate-400 flex-wrap">
@@ -187,10 +264,10 @@ function OrderCard({ order }: { order: OrderWithItems }) {
           )}
         </ul>
 
-        {/* Tracker */}
+        {/* Status tracker */}
         <div className="pt-3 border-t border-border dark:border-white/[0.06]">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-slate-500 mb-3">
-            Order Status
+            Delivery Status
           </p>
           <StatusTracker status={status} />
         </div>
@@ -219,9 +296,9 @@ function EmptyOrders() {
   );
 }
 
-/* ══════════════════════════════════════
-   Page
-══════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   Page (Server Component)
+══════════════════════════════════════════════════════ */
 export default async function MyOrdersPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect("/login");
@@ -257,7 +334,19 @@ export default async function MyOrdersPage() {
         </Link>
       </div>
 
-      {/* Orders */}
+      {/* Status legend */}
+      {orders.length > 0 && (
+        <div className="mb-6 flex flex-wrap gap-3">
+          {(["processing","shipped","delivered"] as TimeStatus[]).map(s => (
+            <span key={s} className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide", STATUS_META[s].badgeCls)}>
+              <span className={cn("h-1.5 w-1.5 rounded-full", STATUS_META[s].dotCls)} />
+              {STATUS_META[s].label}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Orders list */}
       {orders.length === 0
         ? <EmptyOrders />
         : (

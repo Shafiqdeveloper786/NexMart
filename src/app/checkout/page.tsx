@@ -11,6 +11,7 @@ import {
 import { useCartStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
 import { createOrder } from "@/lib/actions/order.actions";
+import { toast } from "sonner";
 
 /* ─────────────────────── constants ─────────────────────── */
 const SHIPPING_FEE = 5.00;
@@ -301,6 +302,10 @@ export default function CheckoutPage() {
         paymentMethod: payMethod,
       });
       clearCart();
+      toast.success("Order placed successfully! 🎉", {
+        description: "We'll notify you when it ships. Redirecting to your orders…",
+        duration: 3500,
+      });
       router.push("/profile/orders");
     } catch {
       setPlacing(false);
