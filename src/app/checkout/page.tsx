@@ -313,6 +313,13 @@ export default function CheckoutPage() {
         items:         items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
         totalAmount:   grandTotal,
         paymentMethod: payMethod,
+        shippingAddress: {
+          fullName: form.fullName,
+          street:   form.address,
+          city:     form.city,
+          phone:    form.phone,
+          zipCode:  form.zip,
+        },
       });
       clearCart();
       toast.success("Order placed successfully! 🎉", {

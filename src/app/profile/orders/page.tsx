@@ -264,6 +264,27 @@ function OrderCard({ order }: { order: OrderWithItems }) {
           )}
         </ul>
 
+        {/* Shipping address */}
+        {order.shippingAddress && (
+          <div className="pt-3 border-t border-border dark:border-white/[0.06]">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-slate-500 mb-2">
+              Deliver To
+            </p>
+            <div className="rounded-xl bg-muted/40 dark:bg-white/[0.03] border border-border dark:border-white/[0.06] px-4 py-3 space-y-0.5">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                {order.shippingAddress.fullName}
+              </p>
+              <p className="text-xs text-muted-foreground dark:text-slate-400">
+                {order.shippingAddress.street}, {order.shippingAddress.city}
+                {order.shippingAddress.zipCode ? ` — ${order.shippingAddress.zipCode}` : ""}
+              </p>
+              <p className="text-xs text-muted-foreground dark:text-slate-400">
+                📞 {order.shippingAddress.phone}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Status tracker */}
         <div className="pt-3 border-t border-border dark:border-white/[0.06]">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-slate-500 mb-3">

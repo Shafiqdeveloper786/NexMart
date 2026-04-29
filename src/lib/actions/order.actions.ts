@@ -11,6 +11,13 @@ export async function createOrder(input: {
   items: Array<{ productId: string; quantity: number; price: number }>;
   totalAmount: number;
   paymentMethod: string;
+  shippingAddress: {
+    fullName: string;
+    street:   string;
+    city:     string;
+    phone:    string;
+    zipCode?: string;
+  };
 }): Promise<{ success: boolean; orderId: string; saved: boolean }> {
   const session = await getServerSession(authOptions);
 
@@ -23,9 +30,17 @@ export async function createOrder(input: {
   try {
     const order = await prisma.order.create({
       data: {
-        userId:      session.user.id,
-        totalAmount: input.totalAmount,
-        status:      "PENDING",
+        userId:          session.user.id,
+        totalAmount:     input.totalAmount,
+        status:          "PENDING",
+        paymentMethod:   input.paymentMethod,
+        shippingAddress: {
+          fullName: input.shippingAddress.fullName,
+          street:   input.shippingAddress.street,
+          city:     input.shippingAddress.city,
+          phone:    input.shippingAddress.phone,
+          zipCode:  input.shippingAddress.zipCode ?? "",
+        },
         items: {
           create: input.items.map(i => ({
             productId: i.productId,

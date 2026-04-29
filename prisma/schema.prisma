@@ -99,17 +99,28 @@ model Product {
 // ORDER MODELS
 // ============================================
 
+// Embedded document — stored inside each Order document in MongoDB
+type ShippingAddress {
+  fullName String
+  street   String
+  city     String
+  phone    String
+  zipCode  String?
+}
+
 model Order {
-  id            String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String      @db.ObjectId
-  items         OrderItem[]
-  totalAmount   Float
-  status        OrderStatus @default(PENDING)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String           @db.ObjectId
+  items           OrderItem[]
+  totalAmount     Float
+  status          OrderStatus      @default(PENDING)
+  shippingAddress ShippingAddress?            // null on very old orders without address
+  paymentMethod   String?                     // cod | card | easypaisa | jazzcash
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   // Relations
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
