@@ -43,7 +43,7 @@ export default function RootLayout({
 
 
             <AgentEmbedScript 
-              agentId="6a0b00817ebbad0f8788150c" // <-- Yahan apni asli Agent ID paste kar dena
+              agentId="6a23f0b461c45b8320031056" // <-- Yahan apni asli Agent ID paste kar dena
               accentColor="#00f2ff"          // NexMart ka cyan neon look
             />
             
