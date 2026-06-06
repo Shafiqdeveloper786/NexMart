@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider, Navbar, Footer } from "@/components/shared";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { Toaster } from "sonner";
+import { AgentEmbedScript } from "@/components/AgentEmbedScript";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,13 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
             <Footer />
             <Toaster position="bottom-right" richColors closeButton />
+
+
+            <AgentEmbedScript 
+              agentId="6a0b00817ebbad0f8788150c" // <-- Yahan apni asli Agent ID paste kar dena
+              accentColor="#00f2ff"          // NexMart ka cyan neon look
+            />
+            
           </ThemeProvider>
         </SessionProvider>
       </body>
