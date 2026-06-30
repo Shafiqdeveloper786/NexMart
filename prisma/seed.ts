@@ -691,14 +691,14 @@ async function main() {
   console.log("🌱 Seeding NexMart database…\n");
 
   /* ── Admin user ── */
-  const email = "test@nexmart.com";
-  const password = "Test1234!";
+  const email = "shafiqchohan7239@gmail.com";
+  const password = "Admin@1234";
   const hashedPassword = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.upsert({
     where: { email },
-    update: { name: "NexMart Admin", password: hashedPassword, role: "ADMIN" },
-    create: { name: "NexMart Admin", email, password: hashedPassword, role: "ADMIN" },
+    update: { name: "Muhammad Shafiq", password: hashedPassword, role: "ADMIN" },
+    create: { name: "Muhammad Shafiq", email, password: hashedPassword, role: "ADMIN" },
   });
   console.log(`✅ Admin user: ${user.email}`);
   console.log(`   Password:   ${password}\n`);
@@ -750,7 +750,7 @@ async function main() {
     return pool[Math.floor(Math.random() * pool.length)];
   };
 
-  // Add 2-4 random reviews for each product
+  // Add 2-4 random reviews for each product and update product ratings
   for (const product of PRODUCTS) {
     const productRecord = await prisma.product.findFirst({ where: { name: product.name } });
     if (productRecord) {
@@ -760,8 +760,20 @@ async function main() {
         const rating = getRandomRating();
         const review = getRandomReview(rating);
         
-        await prisma.review.create({
-          data: {
+        // Use upsert to avoid duplicate key errors
+        await prisma.review.upsert({
+          where: {
+            productId_userId: {
+              productId: productRecord.id,
+              userId: user.id,
+            }
+          },
+          update: {
+            rating: rating,
+            title: review.title,
+            body: review.body,
+          },
+          create: {
             productId: productRecord.id,
             userId: user.id,
             rating: rating,
@@ -771,7 +783,22 @@ async function main() {
         });
       }
       
-      console.log(`✅ ${numReviews} reviews added for: ${product.name}`);
+      // Calculate and update product rating and review count
+      const reviewStats = await prisma.review.aggregate({
+        where: { productId: productRecord.id },
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
+      
+      await prisma.product.update({
+        where: { id: productRecord.id },
+        data: {
+          rating: reviewStats._avg.rating || 0,
+          reviewCount: reviewStats._count.rating || 0,
+        },
+      });
+      
+      console.log(`✅ ${numReviews} reviews added for: ${product.name} (Rating: ${(reviewStats._avg.rating || 0).toFixed(1)}, Count: ${reviewStats._count.rating || 0})`);
     }
   }
 
