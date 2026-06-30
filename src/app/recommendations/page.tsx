@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllProducts } from "@/lib/actions/product.actions";
-import { AddToCartButton } from "@/components/home/AddToCartButton";
-import { ProductImage } from "@/components/home/ProductImage";
+import { ProductCard } from "@/components/product/ProductCard";
 import { Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -10,44 +9,6 @@ export const metadata: Metadata = {
   description: "Curated picks trending right now on NexMart — hand-selected across every category.",
 };
 
-function ProductCard({ product }: {
-  product: {
-    id: string; name: string; price: number;
-    category: string; images: string[]; stock: number;
-  }
-}) {
-  return (
-    <article className="group rounded-2xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-      <Link href={`/product/${product.id}`} className="block">
-        <div className="relative aspect-square bg-gray-50 dark:bg-gray-800/60 overflow-hidden">
-          <ProductImage src={product.images[0] ?? ""} alt={product.name} />
-          {product.stock === 0 && (
-            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-              <span className="rounded-full bg-background border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
-                Out of Stock
-              </span>
-            </div>
-          )}
-          {/* Trending badge */}
-          <div className="absolute top-2.5 left-2.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-foreground/90 px-2 py-0.5 text-[10px] font-semibold text-background backdrop-blur-sm">
-              <Sparkles className="h-2.5 w-2.5" />
-              Trending
-            </span>
-          </div>
-        </div>
-        <div className="px-4 pt-3 pb-1 space-y-0.5">
-          <p className="text-sm font-semibold text-foreground leading-snug line-clamp-1">{product.name}</p>
-          <p className="text-xs text-muted-foreground">{product.category}</p>
-        </div>
-      </Link>
-      <div className="px-4 pb-4 pt-2 flex items-center justify-between">
-        <span className="text-sm font-bold text-foreground">${product.price.toFixed(2)}</span>
-        <AddToCartButton product={product} />
-      </div>
-    </article>
-  );
-}
 
 /* Deterministic pseudo-shuffle — keeps SSR output stable while
    spreading picks across the catalogue (every 3rd product by index). */

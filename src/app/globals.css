@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
+
 /* ============================================================
-   DESIGN TOKENS — NexMart minimalist palette
-   Light: clean white  |  Dark: deep charcoal (#111827)
+   DESIGN TOKENS — NexMart Cyberpunk-Futuristic Theme
+   Dark mode default | Light mode as secondary option
    ============================================================ */
 
 :root {
@@ -40,32 +41,60 @@
   /* Border radius base */
   --radius: 0.625rem;
 
+  /* Cyberpunk neon (light mode - subtle) */
+  --neon-cyan:    #0ea5e9;
+  --neon-magenta: #ec4899;
+  --neon-violet:  #8b5cf6;
+  --neon-yellow:  #f59e0b;
+
   color-scheme: light;
 }
 
 .dark {
-  --background:         #0A0A0A;
-  --foreground:         #ffffff;
+  /* Core dark surfaces */
+  --background:         #030712;
+  --foreground:         #e2e8f0;
 
-  --card:               #141414;
-  --card-foreground:    #ffffff;
+  --card:               #0d1117;
+  --card-foreground:    #e2e8f0;
 
-  --muted:              #1a1a1a;
-  --muted-foreground:   #a1a1aa;
+  --muted:              #161b22;
+  --muted-foreground:   #8b949e;
 
-  --border:             #2a2a2a;
-  --input:              #2a2a2a;
+  --border:             rgba(0, 245, 255, 0.08);
+  --input:              #21262d;
 
-  --primary:            #ffffff;
-  --primary-foreground: #0A0A0A;
+  --primary:            #00f5ff;
+  --primary-foreground: #030712;
 
-  --accent:             #1a1a1a;
-  --accent-foreground:  #ffffff;
+  --accent:             #161b22;
+  --accent-foreground:  #e2e8f0;
 
-  --destructive:        #dc2626;
+  --destructive:        #ff2d78;
   --destructive-foreground: #ffffff;
 
-  --ring:               #3f3f46;
+  --ring:               rgba(0, 245, 255, 0.3);
+
+  /* Cyberpunk neon palette */
+  --neon-cyan:    #00f5ff;
+  --neon-magenta: #ff2d78;
+  --neon-violet:  #8b5cf6;
+  --neon-yellow:  #fbbf24;
+
+  /* Dark surfaces */
+  --surface-0:  #030712;
+  --surface-1:  #0d1117;
+  --surface-2:  #161b22;
+  --surface-3:  #21262d;
+
+  /* Glow shadows */
+  --glow-cyan:    0 0 20px rgba(0, 245, 255, 0.35), 0 0 60px rgba(0, 245, 255, 0.1);
+  --glow-magenta: 0 0 20px rgba(255, 45, 120, 0.35), 0 0 60px rgba(255, 45, 120, 0.1);
+  --glow-violet:  0 0 20px rgba(139, 92, 246, 0.35);
+
+  /* Gradient presets */
+  --gradient-accent: linear-gradient(135deg, #00f5ff, #8b5cf6, #ff2d78);
+  --gradient-card:   linear-gradient(145deg, #0d1117, #161b22);
 
   color-scheme: dark;
 }
@@ -73,19 +102,22 @@
 /* Fallback — respect OS preference before JS runs */
 @media (prefers-color-scheme: dark) {
   :root:not(.dark):not(.light) {
-    --background:       #111827;
-    --foreground:       #f9fafb;
-    --card:             #1f2937;
-    --card-foreground:  #f9fafb;
-    --muted:            #1f2937;
-    --muted-foreground: #9ca3af;
-    --border:           #374151;
-    --input:            #374151;
-    --primary:          #f9fafb;
-    --primary-foreground: #111827;
-    --accent:           #1f2937;
-    --accent-foreground: #f9fafb;
-    --ring:             #4b5563;
+    --background:       #030712;
+    --foreground:       #e2e8f0;
+    --card:             #0d1117;
+    --card-foreground:  #e2e8f0;
+    --muted:            #161b22;
+    --muted-foreground: #8b949e;
+    --border:           rgba(0, 245, 255, 0.08);
+    --input:            #21262d;
+    --primary:          #00f5ff;
+    --primary-foreground: #030712;
+    --accent:           #161b22;
+    --accent-foreground: #e2e8f0;
+    --ring:             rgba(0, 245, 255, 0.3);
+    --neon-cyan:        #00f5ff;
+    --neon-magenta:     #ff2d78;
+    --neon-violet:      #8b5cf6;
     color-scheme: dark;
   }
 }
@@ -107,8 +139,8 @@
   --color-destructive:        var(--destructive);
   --color-ring:               var(--ring);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
 
   --radius-sm:   calc(var(--radius) - 4px);
   --radius-md:   calc(var(--radius) - 2px);
@@ -128,26 +160,129 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Prevent horizontal overflow (Embla flex track bleeds past viewport) ── */
+/* ── Prevent horizontal overflow ── */
 html {
-  overflow-x: hidden;        /* clips at the html level — no scrollbar ever */
+  overflow-x: hidden;
   max-width: 100%;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 body {
-  overflow-x: clip;          /* clip ≠ hidden: doesn't break position:sticky */
+  overflow-x: clip;
   max-width: 100%;
 }
 
-/* ── Hide scrollbar (used for category nav) ── */
+/* ================================================================
+   CYBERPUNK UTILITY CLASSES
+   ================================================================ */
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(0, 245, 255, 0.1);
+  border-radius: 16px;
+}
+
+.light .glass-card,
+:root:not(.dark) .glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Neon glow text */
+.dark .neon-text-cyan,
+.dark .neon-cyan {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 20px rgba(0, 245, 255, 0.6);
+}
+
+.dark .neon-text-magenta,
+.dark .neon-magenta {
+  color: var(--neon-magenta);
+  text-shadow: 0 0 20px rgba(255, 45, 120, 0.6);
+}
+
+/* Animated neon border on hover */
+.neon-border {
+  position: relative;
+  border: 1px solid rgba(0, 245, 255, 0.12);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark .neon-border:hover {
+  border-color: rgba(0, 245, 255, 0.5);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Gradient accent text */
+.gradient-text {
+  background: linear-gradient(135deg, #00f5ff, #8b5cf6, #ff2d78);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* CTA primary button */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #00f5ff, #8b5cf6);
+  color: #030712;
+  font-weight: 700;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Ghost button */
+.btn-ghost {
+  border: 1px solid rgba(0, 245, 255, 0.25);
+  color: var(--neon-cyan);
+  background: transparent;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.dark .btn-ghost:hover {
+  background: rgba(0, 245, 255, 0.08);
+  border-color: rgba(0, 245, 255, 0.5);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+}
+
+/* Scanlines texture overlay (cyberpunk effect) */
+.scanlines {
+  position: relative;
+}
+.dark .scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 245, 255, 0.01) 3px,
+    rgba(0, 245, 255, 0.01) 4px
+  );
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+/* ── Hide scrollbar ── */
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -158,14 +293,9 @@ body {
 
 /* ── Keyboard focus ring ── */
 :focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--neon-cyan, var(--ring));
   outline-offset: 2px;
   border-radius: 4px;
-}
-
-/* ── Card hover lift ── */
-.hover\:-translate-y-0\.5:hover {
-  --tw-translate-y: -2px;
 }
 
 /* ── Cart badge bounce ── */
@@ -181,6 +311,35 @@ body {
   animation: badge-bounce 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+/* ── Skeleton shimmer ── */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Pulse glow animation ── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 245, 255, 0.3); }
+  50%       { box-shadow: 0 0 30px rgba(0, 245, 255, 0.7), 0 0 60px rgba(0, 245, 255, 0.3); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── Neon flicker ── */
+@keyframes neon-flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96%           { opacity: 0.8; }
+  97%           { opacity: 1; }
+  98%           { opacity: 0.85; }
+}
+.animate-neon-flicker {
+  animation: neon-flicker 4s ease-in-out infinite;
+}
+
 /* ── Form field error slide-in ── */
 @keyframes field-error {
   from { opacity: 0; transform: translateY(-4px); }
@@ -190,17 +349,98 @@ body {
   animation: field-error 0.2s ease-out forwards;
 }
 
-/* ── Mobile drawer smooth open ── */
-@keyframes drawer-open {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── Float animation ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
-/* ── Place Order button shimmer ── */
-@keyframes shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
+/* ── Admin sidebar styles ── */
+.admin-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: var(--muted-foreground);
 }
-.animate-shimmer {
-  animation: shimmer 1.2s ease-in-out infinite;
+
+.admin-sidebar-item:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.admin-sidebar-item.active {
+  background: var(--muted);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.dark .admin-sidebar-item:hover {
+  background: rgba(0, 245, 255, 0.06);
+  color: #00f5ff;
+}
+
+.dark .admin-sidebar-item.active {
+  background: rgba(0, 245, 255, 0.1);
+  color: #00f5ff;
+  border: 1px solid rgba(0, 245, 255, 0.2);
+}
+
+
+/* ── Status badge colors ── */
+.status-pending   { color: #fbbf24; background: rgba(251, 191, 36, 0.1);  border: 1px solid rgba(251, 191, 36, 0.3);  }
+.status-paid      { color: #34d399; background: rgba(52, 211, 153, 0.1);  border: 1px solid rgba(52, 211, 153, 0.3);  }
+.status-shipped   { color: #60a5fa; background: rgba(96, 165, 250, 0.1);  border: 1px solid rgba(96, 165, 250, 0.3);  }
+.status-delivered { color: #00f5ff; background: rgba(0, 245, 255, 0.1);   border: 1px solid rgba(0, 245, 255, 0.3);   }
+.status-cancelled { color: #ff2d78; background: rgba(255, 45, 120, 0.1);  border: 1px solid rgba(255, 45, 120, 0.3);  }
+.status-processing{ color: #c084fc; background: rgba(192, 132, 252, 0.1); border: 1px solid rgba(192, 132, 252, 0.3); }
+
+/* Light mode status overrides */
+.light .status-pending   { color: #d97706; background: rgba(251, 191, 36, 0.12);  }
+.light .status-paid      { color: #059669; background: rgba(52, 211, 153, 0.12);  }
+.light .status-shipped   { color: #2563eb; background: rgba(96, 165, 250, 0.12);  }
+.light .status-delivered { color: #0ea5e9; background: rgba(0, 245, 255, 0.12);   }
+.light .status-cancelled { color: #dc2626; background: rgba(255, 45, 120, 0.12);  }
+
+/* ── Data table styles ── */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.data-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 14px 16px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.dark .data-table tr:hover td {
+  background: rgba(0, 245, 255, 0.03);
+}
+
+/* ── Hover card lift ── */
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.dark .card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 245, 255, 0.08);
 }

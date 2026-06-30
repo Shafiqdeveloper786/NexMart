@@ -719,6 +719,65 @@ async function main() {
   ${counts.updated} products updated
   ${PRODUCTS.length} total products in seed
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+
+  /* ── Sample Reviews ── */
+  console.log("\n📝 Seeding sample reviews…\n");
+  
+  // Helper to get random rating (4-5 stars weighted towards 5)
+  const getRandomRating = () => {
+    const rand = Math.random();
+    return rand < 0.7 ? 5 : 4; // 70% chance of 5 stars, 30% chance of 4 stars
+  };
+
+  // Helper to get random review from pool
+  const getRandomReview = (rating: number) => {
+    const reviews5Star = [
+      { title: "Absolutely love it!", body: "Exceeded all my expectations. The quality is outstanding and it works perfectly." },
+      { title: "Best purchase I've made", body: "This product is amazing. Highly recommend to anyone looking for quality." },
+      { title: "Five stars!", body: "Perfect in every way. Exactly what I was looking for." },
+      { title: "Incredible quality", body: "The attention to detail is remarkable. You can tell this was made with care." },
+      { title: "Worth every penny", body: "Premium quality at a great price. I'm extremely satisfied with my purchase." },
+    ];
+    
+    const reviews4Star = [
+      { title: "Really good product", body: "Great quality and works as expected. Minor room for improvement but overall very happy." },
+      { title: "Solid choice", body: "Does what it promises. Good build quality and nice design." },
+      { title: "Very satisfied", body: "Met all my expectations. Would definitely recommend to others." },
+      { title: "Great value", body: "Good quality for the price. Does the job well." },
+    ];
+
+    const pool = rating === 5 ? reviews5Star : reviews4Star;
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  // Add 2-4 random reviews for each product
+  for (const product of PRODUCTS) {
+    const productRecord = await prisma.product.findFirst({ where: { name: product.name } });
+    if (productRecord) {
+      const numReviews = Math.floor(Math.random() * 3) + 2; // 2-4 reviews per product
+      
+      for (let i = 0; i < numReviews; i++) {
+        const rating = getRandomRating();
+        const review = getRandomReview(rating);
+        
+        await prisma.review.create({
+          data: {
+            productId: productRecord.id,
+            userId: user.id,
+            rating: rating,
+            title: review.title,
+            body: review.body,
+          }
+        });
+      }
+      
+      console.log(`✅ ${numReviews} reviews added for: ${product.name}`);
+    }
+  }
+
+  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("  Database seeding complete!");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 }
 
 main()

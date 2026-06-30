@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prismadb";
 import bcrypt from "bcryptjs";
+import { validatePasswordStrength, detectSuspiciousActivity, checkSensitiveOpRateLimit } from "@/lib/utils/validation";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -29,6 +30,15 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email) return null;
 
         const email = (credentials.email as string).trim().toLowerCase();
+
+        // Rate limiting for login attempts
+        const rateLimitKey = `login:${email}`;
+        const rateLimit = checkSensitiveOpRateLimit(rateLimitKey, 5, 300000); // 5 attempts per 5 minutes
+        
+        if (!rateLimit.allowed) {
+          console.log(`Rate limit exceeded for login attempts: ${email}`);
+          return null;
+        }
 
         // ── Session-token path (called after OTP verification) ──────────────
         // The verify-login and forgot-password pages exchange a short-lived
@@ -63,6 +73,25 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user || !user.password) return null;
+
+        // Check for suspicious activity
+        const suspicious = detectSuspiciousActivity({
+          email,
+          password: credentials.password as string,
+          name: user.name || undefined,
+        });
+
+        if (suspicious.length > 0) {
+          console.log(`Suspicious activity detected for ${email}:`, suspicious);
+          // Log but don't block - could be false positive
+        }
+
+        // Validate password strength on login (optional - can be enabled for extra security)
+        // const passwordCheck = validatePasswordStrength(credentials.password as string);
+        // if (!passwordCheck.valid) {
+        //   console.log(`Weak password attempt for ${email}:`, passwordCheck.feedback);
+        //   return null;
+        // }
 
         const valid = await bcrypt.compare(credentials.password as string, user.password);
         if (!valid) return null;

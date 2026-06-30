@@ -30,6 +30,7 @@ model User {
   accounts      Account[]  // OAuth accounts
   sessions      Session[]  // Login sessions
   orders        Order[]    // User's orders
+  reviews       Review[]   // User's product reviews
 }
 
 // NextAuth Account model for OAuth providers
@@ -83,16 +84,43 @@ model Product {
   name        String
   description String?
   price       Float
+  originalPrice Float?
   category    String
   images      String[] // Array of image URLs
   stock       Int      @default(0)
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  salesCount  Int      @default(0)
+  isFeatured  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  sku         String?
+  tags        String[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
   orderItems  OrderItem[]
+  reviews     Review[]
 
   @@index([category])
+  @@index([rating])
+  @@index([isFeatured])
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId String   @db.ObjectId
+  userId    String   @db.ObjectId
+  rating    Int      // 1-5
+  title     String?
+  body      String?
+  createdAt DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@index([productId])
 }
 
 // ============================================
@@ -151,8 +179,10 @@ enum UserRole {
 
 enum OrderStatus {
   PENDING
+  PROCESSING
   PAID
   SHIPPED
   DELIVERED
   CANCELLED
 }
+

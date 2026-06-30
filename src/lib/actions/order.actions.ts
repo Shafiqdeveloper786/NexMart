@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prismadb";
 
+import { sendEmail } from "@/lib/email";
+
 import { deriveDisplayId } from "@/lib/utils/orderUtils";
 
 /* ── Create Order ── */
@@ -52,9 +54,36 @@ export async function createOrder(input: {
       select: { id: true },
     });
 
+    const displayId = deriveDisplayId(order.id);
+
+    // Send confirmation email asynchronously (so it doesn't block redirection)
+    const userEmail = session.user.email;
+    if (userEmail) {
+      sendEmail(
+        userEmail,
+        `Order Confirmed #${displayId} - NexMart`,
+        `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background: #ffffff; color: #111827;">
+          <h2 style="color: #111827; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px;">Order Confirmed!</h2>
+          <p>Hi ${input.shippingAddress.fullName || "Valued Customer"},</p>
+          <p>Thank you for shopping with <strong>NexMart</strong>. Your order has been successfully placed and is being processed.</p>
+          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 10px 0;"><strong>Order ID:</strong> #${displayId}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Total Amount:</strong> $${input.totalAmount.toFixed(2)}</p>
+            <p style="margin: 0;"><strong>Payment Method:</strong> ${input.paymentMethod.toUpperCase()}</p>
+          </div>
+          <p>You can track the live status of your order anytime by visiting our dispatch tracking terminal at <a href="${process.env.NEXTAUTH_URL}/orders/${order.id}" style="color: #0ea5e9; text-decoration: none;">Track Order #${displayId}</a>.</p>
+          <p style="margin-top: 30px; font-size: 12px; color: #9ca3af;">If you have any questions or concerns, feel free to reply to this email or contact us at hello@nexmart.com.</p>
+        </div>
+        `
+      ).catch(err => {
+        console.error("Failed to send order confirmation email:", err);
+      });
+    }
+
     return {
       success: true,
-      orderId: deriveDisplayId(order.id),
+      orderId: displayId,
       saved:   true,
     };
   } catch {
@@ -113,3 +142,46 @@ export async function cancelOrder(
 
   return { success: true, message: "Order cancelled" };
 }
+
+/* ── Update order status (Admin only) ── */
+export async function updateOrderStatus(
+  orderId: string,
+  status: "PENDING" | "PROCESSING" | "PAID" | "SHIPPED" | "DELIVERED" | "CANCELLED"
+): Promise<{ success: boolean; message: string }> {
+  const session = await getServerSession(authOptions);
+  
+  // Strict admin check - only ADMIN role can update order status
+  if (!session?.user) {
+    throw new Error("Unauthorized: Authentication required");
+  }
+  
+  const userRole = (session.user as { role?: string }).role;
+  if (userRole !== "ADMIN") {
+    throw new Error("Unauthorized: Only administrators can update order status");
+  }
+
+  // Verify order exists before updating
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true }
+  });
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  // Update only the status field - no other automatic changes
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { 
+      status,
+      // Explicitly do NOT update any other fields automatically
+    },
+  });
+
+  // Log the status change (in production, you might want to store this in an audit log)
+  console.log(`[ORDER STATUS UPDATE] Order ${orderId} status changed from ${order.status} to ${status} by admin ${session.user.email}`);
+
+  return { success: true, message: `Status updated to ${status}` };
+}
+

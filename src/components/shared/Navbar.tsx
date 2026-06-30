@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Search, ShoppingCart, User, Sun, Moon,
-  Menu, X, LogOut, ChevronDown,
+  Menu, X, LogOut, ChevronDown, ShieldCheck,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -89,7 +89,7 @@ function UserAvatar({ name, image }: { name?: string | null; image?: string | nu
 /* ─────────────────────────────────────────
    User dropdown menu
 ───────────────────────────────────────── */
-function UserMenu({ name, image }: { name?: string | null; image?: string | null }) {
+function UserMenu({ name, image, role }: { name?: string | null; image?: string | null; role?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -133,6 +133,12 @@ function UserMenu({ name, image }: { name?: string | null; image?: string | null
             className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors">
             <ShoppingCart className="h-4 w-4 text-muted-foreground" /> My Orders
           </Link>
+          {role === "ADMIN" && (
+            <Link href="/admin" onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-cyan-400 bg-cyan-400/5 hover:bg-cyan-400/10 border border-cyan-400/20 font-bold transition-colors">
+              <ShieldCheck className="h-4 w-4" /> Admin Terminal
+            </Link>
+          )}
           <div className="my-1 border-t border-border" />
           <button onClick={() => signOut({ callbackUrl: "/" })}
             className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors">
@@ -344,7 +350,7 @@ export function Navbar() {
               {status === "loading" ? (
                 <div className="h-7 w-14 rounded-full bg-muted animate-pulse" />
               ) : session?.user ? (
-                <UserMenu name={session.user.name} image={session.user.image} />
+                <UserMenu name={session.user.name} image={session.user.image} role={session.user.role} />
               ) : (
                 <AuthButtons />
               )}

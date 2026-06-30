@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 export interface CartItem {
   id: string;
@@ -8,6 +8,8 @@ export interface CartItem {
   price: number;
   quantity: number;
   image?: string;
+  category?: string;
+  stock?: number;
 }
 
 interface CartStore {
@@ -70,3 +72,57 @@ export const useCartStore = create<CartStore>()(
     { name: "nexmart-cart" }
   )
 );
+
+/* ── Wishlist Store ── */
+interface WishlistStore {
+  items: string[]; // array of productIds
+  toggleWishlist: (productId: string) => void;
+  hasItem: (productId: string) => boolean;
+}
+
+// Custom storage that only hydrates on client-side
+const wishlistStorage = createJSONStorage(() => {
+  // Return a no-op storage on server
+  if (typeof window === "undefined") {
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+      length: 0,
+      clear: () => {},
+      key: () => null,
+    } as unknown as Storage;
+  }
+  return localStorage;
+});
+
+export const useWishlistStore = create<WishlistStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      toggleWishlist: (productId) => set((state) => {
+        const isExist = state.items.includes(productId);
+        const updated = isExist
+          ? state.items.filter(id => id !== productId)
+          : [...state.items, productId];
+        return { items: updated };
+      }),
+      hasItem: (productId) => get().items.includes(productId)
+    }),
+    { 
+      name: "nexmart-wishlist",
+      storage: wishlistStorage
+    }
+  )
+);
+
+/* ── UI Modal / QuickView Store ── */
+interface UIStore {
+  quickViewProductId: string | null;
+  setQuickViewProductId: (productId: string | null) => void;
+}
+
+export const useUIStore = create<UIStore>((set) => ({
+  quickViewProductId: null,
+  setQuickViewProductId: (id) => set({ quickViewProductId: id }),
+}));

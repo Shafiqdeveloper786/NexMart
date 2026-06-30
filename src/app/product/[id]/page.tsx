@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowLeft, Package, Tag } from "lucide-react";
+import { ArrowLeft, Tag } from "lucide-react";
 import { getProductById, getAllProducts } from "@/lib/actions/product.actions";
 import { AddToCartSection } from "@/components/product/AddToCartSection";
+import { ProductImages } from "@/components/product/ProductImages";
+import { ReviewsSection } from "@/components/product/ReviewsSection";
 
 /*
   generateMetadata runs on the server before the page renders.
@@ -36,47 +38,6 @@ export async function generateMetadata(
 export async function generateStaticParams() {
   const products = await getAllProducts({ limit: 100 });
   return products.map((p) => ({ id: p.id }));
-}
-
-/* ── Image gallery (server) ── */
-function ProductImages({ images, name }: { images: string[]; name: string }) {
-  const primary = images[0];
-  const rest = images.slice(1, 5);
-
-  if (!primary) {
-    return (
-      <div className="aspect-square rounded-3xl bg-muted flex items-center justify-center text-muted-foreground/30">
-        <Package className="h-20 w-20" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {/* Main image */}
-      <div className="aspect-square rounded-3xl overflow-hidden bg-gray-50 dark:bg-gray-800/60">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={primary}
-          alt={name}
-          className="w-full h-full object-cover"
-          loading="eager"
-        />
-      </div>
-      {/* Thumbnails */}
-      {rest.length > 0 && (
-        <div className="grid grid-cols-4 gap-2">
-          {rest.map((img, i) => (
-            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800/60">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img} alt={`${name} view ${i + 2}`}
-                className="w-full h-full object-cover" loading="lazy" />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 /* ── Stock indicator ── */
@@ -180,6 +141,14 @@ export default async function ProductPage(
               <span className="font-mono text-[10px]">{product.id}</span>
             </div>
           </div>
+
+          {/* Reviews Section */}
+          <ReviewsSection
+            productId={product.id}
+            reviews={(product as any).reviews || []}
+            averageRating={product.rating}
+            reviewCount={product.reviewCount}
+          />
         </div>
       </div>
     </div>
